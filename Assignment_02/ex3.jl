@@ -1,4 +1,3 @@
-using PrettyTables
 
 function midnightformula(a, b, c)
     sol_1 = (-b + sqrt(b^2 - 4*a*c))/2/a  # "normal" approach
