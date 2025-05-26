@@ -1,8 +1,9 @@
 using Plots
 using Dates
 
-
+# Newton-Raphson Methode für Keplergleichung
 function newton_E(mean_anomaly, eccentricity, epsilon=1e-9, max_steps=1e10)
+    # Startwert finden
     if eccentricity <= 0.8
         E = mean_anomaly
     else
@@ -13,6 +14,7 @@ function newton_E(mean_anomaly, eccentricity, epsilon=1e-9, max_steps=1e10)
     g(x) = x - eccentricity * sin(x)
     g_prime(x) = 1- eccentricity * cos(x)
 
+    # Iteratioen durchführen
     for i in 1:max_steps
         E_new = E - g(E)/g_prime(E)
 
@@ -28,9 +30,9 @@ function newton_E(mean_anomaly, eccentricity, epsilon=1e-9, max_steps=1e10)
 end
 
 
-
+# Newton-Raphson Methode für Keplergleichung
 function newton_E(mean_anomaly, eccentricity, epsilon=1e-9, max_steps=1e10)
-    global nr_it
+    # Startwert finden
     if eccentricity <= 0.8
         E = mean_anomaly
     else
@@ -41,6 +43,7 @@ function newton_E(mean_anomaly, eccentricity, epsilon=1e-9, max_steps=1e10)
     g(x) = x - eccentricity * sin(x) - mean_anomaly
     g_prime(x) = 1- eccentricity * cos(x)
 
+    # Iteratioen durchführen
     for i in 1:max_steps
         nr_it += 1
         E_new = E - g(E)/g_prime(E)
@@ -56,18 +59,18 @@ function newton_E(mean_anomaly, eccentricity, epsilon=1e-9, max_steps=1e10)
     println("Newton-Raphson-method did not converge in $max_steps steps")
 end
 
-
+# true anomaly f
 function true_anomaly(eccentricity, eccentric_anomaly)
     root_stuff = sqrt((1+eccentricity)/(1-eccentricity))
     return 2 * atan(root_stuff * tan(eccentric_anomaly/2))
 end
 
-
+# Abstand Körper und Fokus
 function distance(semi_major_axis, eccentricity, true_anomaly)
     return semi_major_axis * (1-eccentricity^2) / (1 + eccentricity*cos(true_anomaly))
 end
 
-
+# Position des Körpers
 function position(M, e, a, solver=newton_E)
     E = solver(M, e)
     f = true_anomaly(e, E)
@@ -76,7 +79,7 @@ function position(M, e, a, solver=newton_E)
     return [r*cos(f), r*sin(f)]
 end
 
-
+# Abstand zwischen Vektoren
 function distance(r_1, r_2)
     return sqrt((r_1[1] - r_2[1])^2 + (r_1[2] - r_2[2])^2) 
 end
@@ -123,7 +126,7 @@ M_mars = M.(t, M_0_mars, period_mars)
 
 
 
-
+# Positionsberechnung
 @time r_earth = position.(M_earth, e_earth, a_earth)
 @time r_mars = position.(M_mars, e_mars, a_mars)
 

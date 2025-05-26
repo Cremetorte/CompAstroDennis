@@ -10,6 +10,7 @@ G = 6.674e-11
 
 f(r) = G*M/r^2 - G*m/(R - r)^2 - ω^2*r
 
+# r finden sodass f(r) = 0
 r_sol = find_zero(f, (0, R))
 
 println("Lagrange Point 1: $r_sol")
