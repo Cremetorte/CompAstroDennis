@@ -18,7 +18,7 @@ function f(ξ, y, n)
 end
 
 
-function solve_Lane_Emden(step_size, n_cur, max_steps=1e4)
+function solve_Lane_Emden(step_size, n_cur, max_steps=1e6)
 
     y_0 = [1.0, 0.0]
     y_n = [y_0]
@@ -26,16 +26,22 @@ function solve_Lane_Emden(step_size, n_cur, max_steps=1e4)
     w_n = [y_0[1]]
     z_n = [y_0[2]]
 
-    ξ_0 = 1e-4
+    ξ_0 = 1e-4 # > 0 because 1/ξ appears in f
 
     ξ_n = [ξ_0]
 
     found_root = false
     for i in 1:max_steps
-
-        new_y = RK4_integrator_step(f, ξ_n[end], y_n[end], n_cur, step_size)
+        
+        try
+            global new_y = RK4_integrator_step(f, ξ_n[end], y_n[end], n_cur, step_size)
+        catch e # If ξ_n + h/2 yields a negative value and n is a half-integer, RK4 will throw an error
+            found_root = true
+            break
+        end
         # detect root
         if new_y[1] < 0
+            # assume that the root is found when w < 0
             found_root = true
             break
         end
@@ -49,12 +55,55 @@ function solve_Lane_Emden(step_size, n_cur, max_steps=1e4)
 
     # poor mans for-else
     if found_root == false
-        print("Did not find the root after $max_steps steps.")
+        println("Did not find the root after $max_steps steps.")
     end
 
     return (ξ_n, w_n)
 end
 
+
+function solve_Lane_Emden_with_derivative(step_size, n_cur, max_steps=1e6)
+
+    y_0 = [1.0, 0.0]
+    y_n = [y_0]
+
+    w_n = [y_0[1]]
+    z_n = [y_0[2]]
+
+    ξ_0 = 1e-4 # > 0 because 1/ξ appears in f
+
+    ξ_n = [ξ_0]
+
+    found_root = false
+    for i in 1:max_steps
+        
+        try
+            global new_y = RK4_integrator_step(f, ξ_n[end], y_n[end], n_cur, step_size)
+        catch e # If ξ_n + h/2 yields a negative value and n is a half-integer, RK4 will throw an error
+            found_root = true
+            break
+        end
+        # detect root
+        if new_y[1] < 0
+            # assume that the root is found when w < 0
+            found_root = true
+            break
+        end
+
+        #add to output
+        push!(y_n, new_y)
+        push!(ξ_n, ξ_n[end] + step_size)
+        push!(w_n, y_n[end][1])
+        push!(z_n, y_n[end][2])
+    end
+
+    # poor mans for-else
+    if found_root == false
+        println("Did not find the root after $max_steps steps.")
+    end
+
+    return (ξ_n, w_n, z_n)
+end
 
 
 # step_size = 1e-4
