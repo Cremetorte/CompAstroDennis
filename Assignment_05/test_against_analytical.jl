@@ -22,7 +22,7 @@ for i in 1:3
     plot!(ξ, analytic_funcs[i].(ξ), label="analytic n = $i", linestyle=:dash)
     xlabel!("ξ")
     ylabel!("w")
-    title!("Lane-Emden Solution for n = $i")
+    title!("Lane-Emden Solution for n = $(n_arr[i])")
     savefig("Plots/analytic_lane_emden_n=$(n_arr[i]).png")
 end
 
