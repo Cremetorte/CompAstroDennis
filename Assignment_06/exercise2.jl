@@ -1,6 +1,5 @@
 using Plots
-gr()
-
+gr() 
 # from assignment 5
 function RK4_integrator_step(f, t_n, u_n, Ω, h)
     K_1 = f(u_n[1], u_n[2], u_n[3], u_n[4], Ω, 1 - 1e-3, 1e-3)
@@ -74,7 +73,7 @@ for x_0 in starting_xs
     t_n, x_n, y_n, x_dot_n, y_dot_n = @time solve_RC3BP(C_J, x_0)
     println("Solved!\n")
 
-    plot(x_n[1:1000:end], y_n[1:1000:end], label="C_J=$(C_J), x_0=$(x_0)", dpi=600, markersize=2)
+    plot(x_n[1:2000:end], y_n[1:2000:end], label="C_J=$(C_J), x_0=$(x_0)", dpi=600, markersize=2, marker=:circle, seriestype = :scatter)
     xlabel!("x")
     ylabel!("y")
     title!("RC3BP Solution for C_J=$(C_J) and x_0=$(x_0)")
