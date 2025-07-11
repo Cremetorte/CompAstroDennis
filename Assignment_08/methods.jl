@@ -20,12 +20,15 @@ end
 
 
 function solve_lin_adv(method, σ, u_0, Δt, t_end)
-    nr_timesteps = round(Int64, t_end/Δt)
+    nr_timesteps = floor(Int64, t_end/Δt)
+    # println("Running $nr_timesteps timesteps")
     
     u_cur = u_0
     for i in 1:nr_timesteps
+        print("\rComputing step $i/$nr_timesteps    ")
         u_cur = method(u_cur, σ)
     end
+    print("\n")
     
     return u_cur
 end

@@ -19,6 +19,8 @@ end_t = 4
 Δx = (xmax - xmin)/gridpoints
 Δt = σ * Δx / a
 
+println("Δt = $Δt")
+
 # ----------------------
 # Lattice_initialization
 # ----------------------
@@ -49,12 +51,12 @@ methods = Dict("Upwind" => upwind, "Centered Differences" => centered_diff, "Lax
 
 for method_label in keys(methods)
     # Run solving algorithm and save data in u_sol
-    println("Solving Linear Advection using the $method_label-Method")
-    u_sol = solve_lin_adv((methods[method_label]), σ, u_0, Δt, end_t)
+    println("Solving Linear Advection using the $method_label-Method. Using $(length(u_0)) Gridpoints.")
+    u_sol = @time solve_lin_adv((methods[method_label]), σ, u_0, Δt, end_t)
 
-    # run solving algorithm after it compiled when it was called above to get pure run time
-    println("Benchmark results on compiled functions:")
-    @time solve_lin_adv((methods[method_label]), σ, u_0, Δt, end_t)
+    # # run solving algorithm after it compiled when it was called above to get pure run time
+    # println("Benchmark results on compiled functions:")
+    # @time solve_lin_adv((methods[method_label]), σ, u_0, Δt, end_t)
 
     # plot results
     plot(x_axis(u_sol), u_sol, label="Numeric Solution using the $method_label-Method", grid=true)
