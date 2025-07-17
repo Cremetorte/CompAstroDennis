@@ -61,4 +61,4 @@ savefig("Plots/Q1_final.png")
 # File Output
 # -----------
 df = DataFrame(output, ["time", ["ρ_$i" for i in 1:gridpoints]...])
-CSV.write("output.csv", df)
+CSV.write("Output/output.csv", df)
