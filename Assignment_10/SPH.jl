@@ -23,7 +23,6 @@ scatter(x,y,z, title="Initial Particle Positions", xlabel="X", ylabel="Y", zlabe
 savefig("Plots/initial_particle_positions.png")
 
 
-
 # ---------------------
 # Simulation parameters
 # ---------------------
@@ -33,8 +32,8 @@ K = 0.1                 # polytropic constant
 ν = 0.1                 # viscosity coefficient
 λ = 2.01203286081606    # linear gravity
 h = 0.2                 # smoothing length
-t_end = 100.0            # end time
-Δt = 0.01               # time step
+t_end = 10.0            # end time
+Δt = 0.001               # time step
 println("Simulation parameters set: n=$n, γ=$γ, K=$K, ν=$ν, h=$h, t_end=$t_end, Δt=$Δt")
 
 t = 0.0         # initial time
@@ -78,7 +77,32 @@ end_time = now()
 println("Simulation completed in $(end_time - start_time).")
 
 
-# Save final particle positions
+# -----------------------------
+# calculate denisty between 0,2
+# -----------------------------
+r = range(0, stop=2*0.75, length=100)
+densities = zeros(length(r))
+for i in 1:length(r)
+    densities[i] = 0
+    for j in 1:N
+        densities[i] += particles.mass[j] * kernel(SVector{3, Float64}(r[i],0,0), particles.pos[j], h)
+    end
+end
+
+density_analytical(radius) = (λ/(2*K*(1+n)) * (0.75^2 - radius^2))^n
+densities_analytical = density_analytical.(r)
+# Plotting density profile
+println("Plotting density profile...")
+plot(r, densities ./ maximum(densities), title="Density Profile", xlabel="Distance (r)", ylabel="Density", legend=true)
+plot!(r, densities_analytical ./ maximum(densities_analytical), label="Analytical Density", linestyle=:dash)
+savefig("Plots/density_profile.png")
+
+
+
+
+# ---------------------------------
+# Plotting final particle positions
+# ---------------------------------
 println("Saving final particle positions...")
 x = [p[1] for p in particles.pos]
 y = [p[2] for p in particles.pos]

@@ -17,7 +17,7 @@ k = 0.1
 
 # this is the lambda for the artificial gravitational force \vec{a} = -\lambda \vec{x}.
 lambd = 2*k * (1+n) * np.pi**(-3/(2*n)) * (M * gamma(2.5+n)/(R**3*gamma(1+n)))**(1./n) * R**(-2)
-
+print("lambda for artificial force: ", lambd)
 # create sphere filled with arbitrary particles
 # particle mass
 mass = M/N
