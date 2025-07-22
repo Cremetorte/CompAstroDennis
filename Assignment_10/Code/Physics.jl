@@ -1,0 +1,127 @@
+using StaticArrays
+using LinearAlgebra
+using Base.Threads
+include("DataHandling.jl")
+
+
+# Actually slower, dont use
+function kernel_branchless(pos_i::SVector{3,Float64}, pos_j::SVector{3,Float64}, h=0.2::Float64)
+    l = norm(pos_j .- pos_i)/h
+    
+    #branchless calculation
+    w = (l < 0.5) * (6*l^3 - 6*l^2 +1) + (l >= 0.5 && l <= 1) * 2 * (1 - l)^3 + 0.0
+    return 8/π / h^3 * w
+end
+
+# faster version
+function kernel_ifelse(pos_i::SVector{3,Float64}, pos_j::SVector{3,Float64}, h=0.2::Float64)
+    l = norm(pos_j .- pos_i)/h
+    
+    if l < 0.5
+        w = (6*l^3 - 6*l^2 +1)
+    elseif l >= 0.5 && l <= 1
+        w = 2 * (1 - l)^3
+    else
+        w = 0
+    end
+
+    return 8/π / h^3 * w
+end
+
+
+# Fastest implementation
+function kernel(pos_i::SVector{3,Float64}, pos_j::SVector{3,Float64}, h=0.2::Float64)
+    l = norm(pos_j .- pos_i)/h
+    
+    if l > 1
+        return 0.0
+    elseif l < 0.5
+        w = (6*l^3 - 6*l^2 +1)
+    else
+        w = 2 * (1 - l)^3
+    end
+
+    return 8/π / h^3 * w
+end
+
+function div_kernel(pos_i::SVector{3,Float64}, pos_j::SVector{3,Float64}, h=0.2::Float64)
+    q = pos_j - pos_i
+    
+    l = norm(q)/h
+
+
+    if l > 1 || l == 0
+        # Avoid division by zero and outside support radius
+        return SVector{3, Float64}(0.0, 0.0, 0.0)
+    elseif l < 0.5
+        w = 3*l^2 - 2*l
+    else
+        w = -(1 - l)^2
+    end
+    scalar = 6 / l * 8 / π / h^4 * w
+    return q .* scalar
+end
+
+
+function pressure(density, K::Float64, γ::Float64)
+    return K * density^γ
+end
+
+
+function soundspeed(density, K::Float64, γ::Float64)
+    return sqrt(K * γ * density^(γ-1))
+end
+
+function acceleration_grav_damp(position, velocity, λ::Float64, ν::Float64)
+    return (-λ .* position) - (ν .* velocity)
+end
+
+
+function calculate_properties!(particles, K=0.1, γ=2, h=0.2, λ=2.01203286081606, ν=0.1)
+    # Äußere For-loop in Threads
+    N = length(particles.ρ)
+    @threads for i in 1:N
+        # lokale temporäre Variable für Thread-Safety
+        rho_i = 0.0
+        # Vektorisiert mit @simd, theoretisch mit cuda machbar?
+        @inbounds @simd for j in 1:N
+            rho_i += kernel(particles.pos[i], particles.pos[j], h) * particles.mass[j]
+        end
+
+        # Speichern der berechneten Werte
+        particles.ρ[i] = max(rho_i, 1e-10)
+        particles.pressure[i] = max(pressure(particles.ρ[i], K, γ), 1e-10)
+        particles.soundspeed[i] = soundspeed(particles.ρ[i], K, γ)
+    end
+end
+
+function calculate_accelerations!(particles, h=0.2, λ=2.01203286081606, ν=0.1)
+    # Berechnung der Beschleunigungen
+    N = length(particles.ρ)
+    @threads for i in 1:N
+        particles.acc[i] = acceleration_grav_damp(particles.pos[i], particles.vel[i], λ, ν)
+        @inbounds for j in 1:N
+            if i != j
+                particles.acc[i] = particles.acc[i] - (div_kernel(particles.pos[i], particles.pos[j], h) .* (particles.mass[j] * K * (particles.ρ[i]^(γ-2) + particles.ρ[j]^(γ-2))) )
+            end
+        end
+    end
+end
+
+
+function integrate_vel_acc(particles, Δt=1e-2)
+    N = length(particles.ρ)
+    @threads for i in 1:N
+        @inbounds begin
+            # Update velocity
+            particles.vel[i] = particles.vel[i] + particles.acc[i] .* Δt
+
+            # Update position
+            particles.pos[i] = particles.pos[i] + particles.vel[i] .* Δt
+        end
+    end
+end
+
+
+
+
