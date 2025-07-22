@@ -8,7 +8,7 @@ from scipy.special import gamma
 
 R = 0.75
 # number of particles, use N=100 for debugging, N=1000 for production run
-N = 1000
+N = 10000
 M = 2.0
 
 # EOS params (use the same in your SPH program for EOS)
@@ -57,4 +57,4 @@ ax[2].scatter(y, z, s=1)
 fig.show()
 
 
-np.savetxt("random_distribution.dat", np.transpose([x,y,z,vx,vy,vz,m]))
+np.savetxt("random_distribution.dat", np.transpose([x,y,z,vx,vy,vz,m]), header="x y z vx vy vz m", comments="")

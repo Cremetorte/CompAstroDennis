@@ -33,7 +33,7 @@ K = 0.1                 # polytropic constant
 λ = 2.01203286081606    # linear gravity
 h = 0.2                 # smoothing length
 t_end = 10.0            # end time
-Δt = 0.001               # time step
+Δt = 0.01               # time step
 println("Simulation parameters set: n=$n, γ=$γ, K=$K, ν=$ν, h=$h, t_end=$t_end, Δt=$Δt")
 
 t = 0.0         # initial time
@@ -43,7 +43,7 @@ nr_timesteps = Int(floor(t_end / Δt) + 1)
 # ---------------
 # Setup animation
 # ---------------
-frames = Vector{Plots.Plot}(undef, 0)
+frames_position = Vector{Plots.Plot}(undef, 0)
 
 # ----------------
 # Start Simulation
@@ -70,7 +70,7 @@ for step in 1:nr_timesteps
         global y = [p[2] for p in particles.pos]
         global z = [p[3] for p in particles.pos]
         # Store frame for animation
-        push!(frames, scatter(x, y, z, title="Particle Positions at time $(rpad(round(t, digits=4), 4, '0'))", xlabel="X", ylabel="Y", zlabel="Z", legend=false,))
+        push!(frames_position, scatter(x, y, z, title="Particle Positions at time $(rpad(round(t, digits=4), 4, '0'))", xlabel="X", ylabel="Y", zlabel="Z", legend=false,))
     end
 end
 end_time = now()
@@ -78,7 +78,7 @@ println("Simulation completed in $(end_time - start_time).")
 
 
 # -----------------------------
-# calculate denisty between 0,2
+# calculate denisty between 0,2R
 # -----------------------------
 r = range(0, stop=2*0.75, length=100)
 densities = zeros(length(r))
@@ -93,8 +93,8 @@ density_analytical(radius) = (λ/(2*K*(1+n)) * (0.75^2 - radius^2))^n
 densities_analytical = density_analytical.(r)
 # Plotting density profile
 println("Plotting density profile...")
-plot(r, densities ./ maximum(densities), title="Density Profile", xlabel="Distance (r)", ylabel="Density", legend=true)
-plot!(r, densities_analytical ./ maximum(densities_analytical), label="Analytical Density", linestyle=:dash)
+plot(r, densities, title="Density Profile", xlabel="Distance (r)", ylabel="Density", legend=true)
+plot!(r, densities_analytical, label="Analytical Density", linestyle=:dash)
 savefig("Plots/density_profile.png")
 
 
@@ -107,7 +107,7 @@ println("Saving final particle positions...")
 x = [p[1] for p in particles.pos]
 y = [p[2] for p in particles.pos]
 z = [p[3] for p in particles.pos]
-plot(x,y,z, title="Particle Positions", xlabel="X", ylabel="Y", zlabel="Z")
+scatter(x,y,z, title="Particle Positions", xlabel="X", ylabel="Y", zlabel="Z")
 savefig("Plots/final_particle_positions.png")
 
 
@@ -115,7 +115,7 @@ savefig("Plots/final_particle_positions.png")
 # Generate GIF
 # ------------
 println("Generating GIF...")
-anim = @animate for i in 1:length(frames)
-    plot!(frames[i], xlims=(-1, 1), ylims=(-1, 1), zlims=(-1, 1))
+anim = @animate for i in 1:length(frames_position)
+    plot!(frames_position[i], xlims=(-1, 1), ylims=(-1, 1), zlims=(-1, 1))
 end
 gif(anim, "Animations/Toy_Star.gif", fps=30)

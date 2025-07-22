@@ -45,7 +45,7 @@ function kernel(pos_i::SVector{3,Float64}, pos_j::SVector{3,Float64}, h=0.2::Flo
 end
 
 function div_kernel(pos_i::SVector{3,Float64}, pos_j::SVector{3,Float64}, h=0.2::Float64)
-    q = pos_j - pos_i
+    q = pos_i - pos_j
     
     l = norm(q)/h
 
@@ -59,7 +59,7 @@ function div_kernel(pos_i::SVector{3,Float64}, pos_j::SVector{3,Float64}, h=0.2:
         w = -(1 - l)^2
     end
     scalar = 6 / l * 8 / π / h^4 * w
-    return q .* scalar
+    return q * scalar
 end
 
 
@@ -100,9 +100,11 @@ function calculate_accelerations!(particles, h=0.2, λ=2.01203286081606, ν=0.1)
     N = length(particles.ρ)
     @threads for i in 1:N
         particles.acc[i] = acceleration_grav_damp(particles.pos[i], particles.vel[i], λ, ν)
-        @inbounds for j in 1:N
+        @inbounds @simd for j in 1:N
             if i != j
-                particles.acc[i] = particles.acc[i] - (div_kernel(particles.pos[i], particles.pos[j], h) .* (particles.mass[j] * K * (particles.ρ[i]^(γ-2) + particles.ρ[j]^(γ-2))) )
+                particles.acc[i] = particles.acc[i] - div_kernel(particles.pos[i], particles.pos[j], h) .* 
+                (particles.mass[j] * (particles.pressure[i]/particles.ρ[i]^2 + 
+                particles.pressure[j]/particles.ρ[j]^2) )
             end
         end
     end
