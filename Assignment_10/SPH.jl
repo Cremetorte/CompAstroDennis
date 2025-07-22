@@ -1,5 +1,5 @@
-include("lib/DataHandling.jl")
-include("lib/Physics.jl")
+include("Code/DataHandling.jl")
+include("Code/Physics.jl")
 using Plots
 using Dates
 using Base.Threads
