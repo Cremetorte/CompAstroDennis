@@ -32,7 +32,7 @@ K = 0.1                 # polytropic constant
 ν = 0.1                 # viscosity coefficient
 λ = 2.01203286081606    # linear gravity
 h = 0.2                 # smoothing length
-t_end = 100.0            # end time
+t_end = 10.0            # end time
 Δt = 0.01               # time step
 println("Simulation parameters set: n=$n, γ=$γ, K=$K, ν=$ν, h=$h, t_end=$t_end, Δt=$Δt")
 
@@ -44,7 +44,6 @@ nr_timesteps = Int(floor(t_end / Δt) + 1)
 # Setup animation
 # ---------------
 frames_position = Vector{Plots.Plot}(undef, 0)
-frames_density = Vector{Plots.Plot}(undef, 0)
 
 # ----------------
 # Start Simulation
@@ -66,13 +65,12 @@ for step in 1:nr_timesteps
     integrate_leapfrog!(particles, Δt, K, γ, h, λ, ν)
 
     if step % 10 == 0
+        global frame
         global x = [p[1] for p in particles.pos]
         global y = [p[2] for p in particles.pos]
         global z = [p[3] for p in particles.pos]
-        global r = [norm(p) for p in particles.pos]
         # Store frame for animation
         push!(frames_position, scatter(x, y, z, title="Particle Positions at time $(rpad(round(t, digits=4), 4, '0'))", xlabel="X", ylabel="Y", zlabel="Z", legend=false,))
-        push!(frames_density, scatter(r, particles.ρ, title="Particle Densities at time $(rpad(round(t, digits=4), 4, '0'))", xlabel="Calculated Density", ylabel="rho", legend=true))
     end
 end
 end_time = now()
@@ -116,14 +114,8 @@ savefig("Plots/final_particle_positions.png")
 # ------------
 # Generate GIF
 # ------------
-println("Generating GIFs...")
-anim_pos = @animate for i in 1:length(frames_position)
+println("Generating GIF...")
+anim = @animate for i in 1:length(frames_position)
     plot!(frames_position[i], xlims=(-1, 1), ylims=(-1, 1), zlims=(-1, 1))
 end
-gif(anim_pos, "Animations/Toy_Star_pos.gif", fps=30)
-
-anim_density = @animate for i in 1:length(frames_position)
-    plot!(frames_density[i], xlims=(0, 0.8), ylims=(0, 3))
-    plot!(r, densities_analytical, label="Analytical Density", linestyle=:dash)
-end
-gif(anim_density, "Animations/Toy_Star_density.gif", fps=30)
+gif(anim, "Animations/Toy_Star.gif", fps=30)
