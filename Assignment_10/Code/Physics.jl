@@ -87,8 +87,10 @@ function calculate_properties!(particles, K=0.1, γ=2, h=0.2, λ=2.0120328608160
         # lokale temporäre Variable für Thread-Safety
         rho_i = 0.0
         # Vektorisiert mit @simd, theoretisch mit cuda machbar?
-        @inbounds @simd for j in 1:N
-            rho_i += kernel(particles.pos[i], particles.pos[j], h) * particles.mass[j]
+        @inbounds for j in 1:N
+            if j != i
+                rho_i += kernel(particles.pos[i], particles.pos[j], h) * particles.mass[j]
+            end
         end
 
         # Speichern der berechneten Werte

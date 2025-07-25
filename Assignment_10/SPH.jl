@@ -32,7 +32,7 @@ K = 0.1                 # polytropic constant
 ν = 0.1                 # viscosity coefficient
 λ = 2.01203286081606    # linear gravity
 h = 0.2                 # smoothing length
-t_end = 100.0            # end time
+t_end = 20.0            # end time
 Δt = 0.01               # time step
 println("Simulation parameters set: n=$n, γ=$γ, K=$K, ν=$ν, h=$h, t_end=$t_end, Δt=$Δt")
 
@@ -52,20 +52,20 @@ frames_density = Vector{Plots.Plot}(undef, 0)
 println("Starting simulation with $(Threads.nthreads()) threads...\n")
 start_time = now()
 for step in 1:nr_timesteps
-    print("Calculating time $(rpad(round(t, digits=4), 4, '0')) ≡ step $(lpad(step, 4, '0'))/$nr_timesteps...    \r")
     # Update time
     global t += Δt
     
     # Calculate calculate_properties
     calculate_properties!(particles, K, γ, h, λ, ν)
-
+    
     # Calculate accelerations
-    calculate_accelerations!(particles, h, λ, ν)
-
+    calculate_accelerations_symmetric!(particles, h, λ, ν)
+    
     # integrate a, vel
-    integrate_leapfrog!(particles, Δt, K, γ, h, λ, ν)
-
+    integrate_vel_acc!(particles, Δt)
+    
     if step % 10 == 0
+        print("Calculating time $(rpad(round(t, digits=4), 4, '0')) ≡ step $(lpad(step, 4, '0'))/$nr_timesteps...    \r")
         global x = [p[1] for p in particles.pos]
         global y = [p[2] for p in particles.pos]
         global z = [p[3] for p in particles.pos]
