@@ -33,7 +33,7 @@ end
 
 # Fastest implementation
 function kernel(pos_i::SVector{3,Float64}, pos_j::SVector{3,Float64}, h=0.2::Float64)
-    l = norm(pos_j .- pos_i)/h
+    l = norm(pos_j - pos_i)/h
     
     if l > 1
         return 0.0
@@ -85,17 +85,15 @@ function calculate_properties!(particles, K=0.1, γ=2, h=0.2, λ=2.0120328608160
     N = length(particles.ρ)
     @threads for i in 1:N
         # lokale temporäre Variable für Thread-Safety
-        rho_i = 0.0
+        rho_i = 0
         # Vektorisiert mit @simd, theoretisch mit cuda machbar?
         @inbounds for j in 1:N
-            if j != i
-                rho_i += kernel(particles.pos[i], particles.pos[j], h) * particles.mass[j]
-            end
+            rho_i += kernel(particles.pos[i], particles.pos[j], h) * particles.mass[j]
         end
 
         # Speichern der berechneten Werte
-        particles.ρ[i] = max(rho_i, 1e-10)
-        particles.pressure[i] = max(pressure(particles.ρ[i], K, γ), 1e-10)
+        particles.ρ[i] = rho_i
+        particles.pressure[i] = particles.ρ[i], K, γ
         particles.soundspeed[i] = soundspeed(particles.ρ[i], K, γ)
     end
 end
@@ -109,11 +107,11 @@ function calculate_accelerations!(particles, h=0.2, λ=2.01203286081606, ν=0.1)
         pressure_dens_term_i = particles.pressure[i]/particles.ρ[i]^2
 
         @inbounds @simd for j in 1:N
-            if i != j
-                particles.acc[i] = particles.acc[i] - div_kernel(particles.pos[i], particles.pos[j], h) .* 
-                (particles.mass[j] * (pressure_dens_term_i + 
-                particles.pressure[j]/particles.ρ[j]^2) )
-            end
+            
+            particles.acc[i] = particles.acc[i] - div_kernel(particles.pos[i], particles.pos[j], h) .* 
+            (particles.mass[j] * (pressure_dens_term_i + 
+            particles.pressure[j]/particles.ρ[j]^2) )
+            
         end
     end
 end
