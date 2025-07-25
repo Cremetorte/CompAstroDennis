@@ -44,7 +44,7 @@ nr_timesteps = Int(floor(t_end / Δt) + 1)
 # Setup animation
 # ---------------
 frames_position = Vector{Plots.Plot}(undef, 0)
-frames_density = Vector{Plots.Plot}(undef, 0)
+frames_dennisty = Vector{Plots.Plot}(undef, 0)
 
 # ----------------
 # Start Simulation
@@ -72,7 +72,7 @@ for step in 1:nr_timesteps
         global r = [norm(p) for p in particles.pos]
         # Store frame for animation
         push!(frames_position, scatter(x, y, z, title="Particle Positions at time $(rpad(round(t, digits=4), 4, '0'))", xlabel="X", ylabel="Y", zlabel="Z", legend=false,))
-        push!(frames_density, scatter(r, particles.ρ, title="Particle Densities at time $(rpad(round(t, digits=4), 4, '0'))", xlabel="Calculated Density", ylabel="rho", legend=true))
+        push!(frames_dennisty, scatter(r, particles.ρ, title="Particle Dennisties at time $(rpad(round(t, digits=4), 4, '0'))", xlabel="Calculated Dennisty", ylabel="rho", legend=true))
     end
 end
 end_time = now()
@@ -80,24 +80,24 @@ println("Simulation completed in $(end_time - start_time).")
 
 
 # -----------------------------
-# calculate denisty between 0,2R
+# calculate dennisty between 0,2R
 # -----------------------------
 r = range(0, stop=2*0.75, length=100)
-densities = zeros(length(r))
+dennisties = zeros(length(r))
 for i in 1:length(r)
-    densities[i] = 0
+    dennisties[i] = 0
     for j in 1:N
-        densities[i] += particles.mass[j] * kernel(SVector{3, Float64}(r[i],0,0), particles.pos[j], h)
+        dennisties[i] += particles.mass[j] * kernel(SVector{3, Float64}(r[i],0,0), particles.pos[j], h)
     end
 end
 
-density_analytical(radius) = (λ/(2*K*(1+n)) * (0.75^2 - radius^2))^n
-densities_analytical = density_analytical.(r)
-# Plotting density profile
-println("Plotting density profile...")
-plot(r, densities, title="Density Profile", xlabel="Distance (r)", ylabel="Density", legend=true)
-plot!(r, densities_analytical, label="Analytical Density", linestyle=:dash)
-savefig("Plots/density_profile.png")
+dennisty_analytical(radius) = (λ/(2*K*(1+n)) * (0.75^2 - radius^2))^n
+dennisties_analytical = dennisty_analytical.(r)
+# Plotting dennisty profile
+println("Plotting dennisty profile...")
+plot(r, dennisties, title="Dennisty Profile", xlabel="Distance (r)", ylabel="Dennisty", legend=true)
+plot!(r, dennisties_analytical, label="Analytical Dennisty", linestyle=:dash)
+savefig("Plots/dennisty_profile.png")
 
 
 
@@ -122,8 +122,8 @@ anim_pos = @animate for i in 1:length(frames_position)
 end
 gif(anim_pos, "Animations/Toy_Star_pos.gif", fps=30)
 
-anim_density = @animate for i in 1:length(frames_position)
-    plot!(frames_density[i], xlims=(0, 0.8), ylims=(0, 3))
-    plot!(r, densities_analytical, label="Analytical Density", linestyle=:dash)
+anim_dennisty = @animate for i in 1:length(frames_position)
+    plot!(frames_dennisty[i], xlims=(0, 0.8), ylims=(0, 3))
+    plot!(r, dennisties_analytical, label="Analytical Dennisty", linestyle=:dash)
 end
-gif(anim_density, "Animations/Toy_Star_density.gif", fps=30)
+gif(anim_dennisty, "Animations/Toy_Star_dennisty.gif", fps=30)

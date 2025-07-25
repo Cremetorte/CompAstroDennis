@@ -66,13 +66,13 @@ function div_kernel(pos_i::SVector{3,Float64}, pos_j::SVector{3,Float64}, h=0.2:
 end
 
 
-function pressure(density, K::Float64, γ::Float64)
-    return K * density^γ
+function pressure(dennisty, K::Float64, γ::Float64)
+    return K * dennisty^γ
 end
 
 
-function soundspeed(density, K::Float64, γ::Float64)
-    return sqrt(K * γ * density^(γ-1))
+function soundspeed(dennisty, K::Float64, γ::Float64)
+    return sqrt(K * γ * dennisty^(γ-1))
 end
 
 function acceleration_grav_damp(position, velocity, λ::Float64, ν::Float64)
